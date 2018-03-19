@@ -4,7 +4,8 @@
 \alias{bscols}
 \title{Arrange HTML elements or widgets in Bootstrap columns}
 \usage{
-bscols(..., widths = NA, device = c("xs", "sm", "md", "lg"))
+bscols(..., widths = NA, device = c("xs", "sm", "md", "lg"),
+  bootstrap = getOption("crosstalk.bootstrap", "full"))
 }
 \arguments{
 \item{...}{\code{htmltools} tag objects, lists, text, HTML widgets, or
@@ -20,6 +21,9 @@ after the widths are recycled and non-\code{NA} values are subtracted.}
 smaller screen sizes the layout will collapse to a one-column,
 top-to-bottom display instead. xs: never collapse, sm: collapse below
 768px, md: 992px, lg: 1200px.}
+
+\item{bootstrap}{Which version of the bootstrap library to use:
+\code{"full"}, \code{"minimal"}, or \code{"none"}.}
 }
 \value{
 A \code{\link[htmltools]{browsable}} HTML element.
@@ -28,6 +32,11 @@ A \code{\link[htmltools]{browsable}} HTML element.
 This helper function makes it easy to put HTML elements side by side. It can
 be called directly from the console but is especially designed to work in an
 R Markdown document. Warning: This will bring in all of Bootstrap!
+}
+\details{
+Using this control normally pulls in the full bootstrap Javascript library.
+Use \code{bootstrap = "minimal"} to only include enough for the \code{crosstalk}
+controls, or \code{bootstrap = "none"} if it is included in some other way.
 }
 \examples{
 library(htmltools)
@@ -53,4 +62,3 @@ bscols(widths = c(2, 4),
   div(style = css(width="100\%", height="400px", background_color="blue"))
 )
 }
-

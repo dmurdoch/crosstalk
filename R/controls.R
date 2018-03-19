@@ -1,4 +1,5 @@
-bootstrapLib <- function(theme = NULL) {
+bootstrapLib <- function(lib = c("full", "minimal", "none")) {
+  lib <- match.arg(lib)
   # Intentionally use an older version of bootstrap. The rendering
   # environment may use a bootstrap version that has a theme, and
   # we don't want to trump that just for our little controls.
@@ -8,7 +9,8 @@ bootstrapLib <- function(theme = NULL) {
     script = c(
       "js/bootstrap.min.js"
     ),
-    stylesheet = if (is.null(theme)) "css/bootstrap.min.css",
+    stylesheet = if (lib == "full") "css/bootstrap.min.css"
+                 else if (lib == "minimal") "css/bootstrap-iso.css",
     meta = list(viewport = "width=device-width, initial-scale=1")
   )
 }
@@ -103,6 +105,13 @@ makeGroupOptions <- function(sharedData, group, allLevels) {
 #'   present in the data?
 #' @param multiple Can multiple values be selected?
 #' @param columns Number of columns the options should be arranged into.
+#' @param bootstrap Which version of the bootstrap library to use:
+#'   \code{"full"}, \code{"minimal"}, or \code{"none"}.
+#'
+#' @details
+#' Using this control normally pulls in the full bootstrap Javascript library.
+#' Use \code{bootstrap = "minimal"} to only include enough for the \code{crosstalk}
+#' controls, or \code{bootstrap = "none"} if it is included in some other way.
 #'
 #' @examples
 #' ## Only run examples in interactive R sessions
@@ -115,24 +124,29 @@ makeGroupOptions <- function(sharedData, group, allLevels) {
 #'
 #' @export
 filter_select <- function(id, label, sharedData, group, allLevels = FALSE,
-  multiple = TRUE) {
+                          multiple = TRUE, bootstrap = getOption("crosstalk.bootstrap", "full")) {
 
   options <- makeGroupOptions(sharedData, group, allLevels)
 
-  htmltools::browsable(attachDependencies(
+  ui <-
     tags$div(id = id, class = "form-group crosstalk-input-select crosstalk-input",
-      tags$label(class = "control-label", `for` = id, label),
-      tags$div(
-        tags$select(
-          multiple = if (multiple) NA else NULL
-        ),
-        tags$script(type = "application/json",
-          `data-for` = id,
-          jsonlite::toJSON(options, dataframe = "columns", pretty = TRUE)
-        )
-      )
-    ),
-    c(list(jqueryLib(), bootstrapLib(), selectizeLib()), crosstalkLibs())
+             tags$label(class = "control-label", `for` = id, label),
+             tags$div(
+               tags$select(
+                 multiple = if (multiple) NA else NULL
+               ),
+               tags$script(type = "application/json",
+                           `data-for` = id,
+                           jsonlite::toJSON(options, dataframe = "columns", pretty = TRUE)
+               )
+             )
+    )
+  if (bootstrap == "minimal")
+    ui <- tags$div(class = "bootstrap-iso", ui)
+
+  htmltools::browsable(attachDependencies(
+    ui,
+    c(list(jqueryLib(), selectizeLib(), bootstrapLib(bootstrap)), crosstalkLibs())
   ))
 }
 
@@ -157,7 +171,8 @@ columnize <- function(columnCount, elements) {
 #'
 #' @rdname filter_select
 #' @export
-filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inline = FALSE, columns = 1) {
+filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inline = FALSE, columns = 1,
+                            bootstrap = getOption("crosstalk.bootstrap", "full")) {
   options <- makeGroupOptions(sharedData, group, allLevels)
 
   labels <- options$items$label
@@ -181,7 +196,7 @@ filter_checkbox <- function(id, label, sharedData, group, allLevels = FALSE, inl
         jsonlite::toJSON(options, dataframe = "columns", pretty = TRUE)
       )
     ),
-    c(list(jqueryLib(), bootstrapLib()), crosstalkLibs())
+    c(list(jqueryLib(), bootstrapLib(bootstrap)), crosstalkLibs())
   ))
 }
 
@@ -474,6 +489,13 @@ animation_options <- function(interval=1000,
 #'   smaller screen sizes the layout will collapse to a one-column,
 #'   top-to-bottom display instead. xs: never collapse, sm: collapse below
 #'   768px, md: 992px, lg: 1200px.
+#' @param bootstrap Which version of the bootstrap library to use:
+#'   \code{"full"}, \code{"minimal"}, or \code{"none"}.
+#'
+#' @details
+#' Using this control normally pulls in the full bootstrap Javascript library.
+#' Use \code{bootstrap = "minimal"} to only include enough for the \code{crosstalk}
+#' controls, or \code{bootstrap = "none"} if it is included in some other way.
 #'
 #' @return A \code{\link[htmltools]{browsable}} HTML element.
 #'
@@ -501,7 +523,8 @@ animation_options <- function(interval=1000,
 #'   div(style = css(width="100%", height="400px", background_color="blue"))
 #' )
 #' @export
-bscols <- function(..., widths = NA, device = c("xs", "sm", "md", "lg")) {
+bscols <- function(..., widths = NA, device = c("xs", "sm", "md", "lg"),
+                   bootstrap = getOption("crosstalk.bootstrap", "full")) {
   device <- match.arg(device)
 
   if (length(list(...)) == 0) {
@@ -534,8 +557,10 @@ bscols <- function(..., widths = NA, device = c("xs", "sm", "md", "lg")) {
       }, SIMPLIFY = FALSE))
     )
   )
+  if (bootstrap == "minimal")
+    ui <- tags$div(class = "bootstrap-iso", ui)
 
-  browsable(attachDependencies(ui, list(jqueryLib(), bootstrapLib())))
+  browsable(attachDependencies(ui, list(jqueryLib(), bootstrapLib(bootstrap))))
 }
 
 controlLabel <- function(controlName, label) {
